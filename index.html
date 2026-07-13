@@ -240,6 +240,7 @@
                     <option value="日本人2人（佐藤さんと松本さん）による対話・掛け合い形式">日本人2人（佐藤さんと松本さん）による対話・掛け合い形式</option>
                     <option value="日本人ナレーター1人による優しい語りかけ形式">日本人ナレーター1人による優しい語りかけ形式</option>
                     <option value="1分以内のショート動画・縦画面形式">1分以内のショート動画・縦画面形式</option>
+                    <option value="ステップ順の操作解説形式">ステップ順の操作解説形式</option>
                 `;
             } else if (outputType === 'slide') {
                 formatSelect.innerHTML = `
@@ -254,6 +255,9 @@
                     <option value="数値を強調するデータ視覚化レイアウト">数値を強調するデータ視覚化レイアウト</option>
                 `;
             }
+            
+            // 形式が切り替わった直後にプロンプトも再生成する
+            generatePrompt();
         }
 
         // Generate the prompt based on inputs
@@ -369,14 +373,16 @@ ${focusString}
             }
 
             // Set the generated text to the textarea
-            document.getElementById('promptOutput').value = promptText;
-            
-            // Slight highlight effect to show it generated
             const outputArea = document.getElementById('promptOutput');
-            outputArea.classList.add('bg-blue-50');
-            setTimeout(() => {
-                outputArea.classList.remove('bg-blue-50');
-            }, 300);
+            if (outputArea) {
+                outputArea.value = promptText;
+                
+                // Slight highlight effect to show it generated
+                outputArea.classList.add('bg-blue-50');
+                setTimeout(() => {
+                    outputArea.classList.remove('bg-blue-50');
+                }, 300);
+            }
         }
 
         // Copy prompt to clipboard
@@ -426,10 +432,9 @@ ${focusString}
         // Initialize form on load
         window.onload = function() {
             updateForm();
-            generatePrompt(); // Generate initial prompt
             
-            // Add event listeners to all inputs to regenerate prompt on change
-            const inputs = document.querySelectorAll('input[type="text"], textarea, select, input[type="checkbox"]');
+            // 全ての入力要素（input, textarea, select）に変更検知のリスナーを追加
+            const inputs = document.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
                 input.addEventListener('input', generatePrompt);
                 input.addEventListener('change', generatePrompt);
