@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM Prompt Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom scrollbar for output area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-4 px-6 flex items-center justify-between z-10 relative">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+            </div>
+            <h1 class="text-xl font-bold text-slate-800">NotebookLM Prompt Maker <span class="text-sm font-normal text-slate-500 ml-2">for Studio</span></h1>
+        </div>
+        <div>
+            <a href="https://notebooklm.google.com/" target="_blank" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-full transition-colors flex items-center gap-2 font-medium">
+                NotebookLMを開く <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Column: Input Form -->
+        <div class="w-1/2 bg-white overflow-y-auto border-r border-slate-200 shadow-[2px_0_10px_rgba(0,0,0,0.02)] z-0">
+            <div class="p-8 max-w-2xl mx-auto space-y-8 pb-24">
+                
+                <!-- Section 1: Basic Info -->
+                <section>
+                    <h2 class="text-lg font-bold flex items-center gap-2 mb-4 border-b pb-2 text-slate-700">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+                        基本情報の登録
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">プロジェクト名 / テーマ <span class="text-red-500">*</span></label>
+                            <input type="text" id="projectName" placeholder="例：ゴルフ丨１分コーチの魅力解説" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" value="ゴルフ丨１分コーチの魅力解説">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ソース情報 (URL・アプリ名など)</label>
+                            <textarea id="sourceInfo" rows="3" placeholder="例：https://youtube.com/...&#10;アプリ名：1分コーチ" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow custom-scrollbar">YouTubeURL：https://example.com/video
+公式サイト：https://example.com/app
+アプリ名：1分ゴルフコーチ</textarea>
+                            <p class="text-xs text-slate-500 mt-1">※この情報はNotebookLMへの入力用ではなく、プロンプトのコンテキストとして使用されます。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Output Format -->
+                <section>
+                    <h2 class="text-lg font-bold flex items-center gap-2 mb-4 border-b pb-2 text-slate-700">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
+                        作成したいコンテンツ形式
+                    </h2>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="outputType" value="video" class="peer sr-only" checked onchange="updateForm()">
+                            <div class="border-2 border-slate-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
+                                <i class="fa-solid fa-video text-2xl text-blue-500 mb-2"></i>
+                                <div class="font-bold text-sm">動画解説台本</div>
+                                <div class="text-xs text-slate-500 mt-1">Google Vids等用</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="outputType" value="slide" class="peer sr-only" onchange="updateForm()">
+                            <div class="border-2 border-slate-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
+                                <i class="fa-regular fa-file-powerpoint text-2xl text-orange-500 mb-2"></i>
+                                <div class="font-bold text-sm">スライド資料</div>
+                                <div class="text-xs text-slate-500 mt-1">プレゼン・提案用</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="outputType" value="infographic" class="peer sr-only" onchange="updateForm()">
+                            <div class="border-2 border-slate-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
+                                <i class="fa-solid fa-chart-pie text-2xl text-emerald-500 mb-2"></i>
+                                <div class="font-bold text-sm">インフォグラフィック</div>
+                                <div class="text-xs text-slate-500 mt-1">図解・SNS画像用</div>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Section 3: Detailed Settings (Dynamic based on selection) -->
+                <section id="detailSettings">
+                    <h2 class="text-lg font-bold flex items-center gap-2 mb-4 border-b pb-2 text-slate-700">
+                        <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span>
+                        詳細設定 (トーン＆マナー)
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Format Style -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">表現スタイル</label>
+                            <select id="formatStyle" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                <option value="日本人2人（佐藤さんと松本さん）による対話・掛け合い形式">日本人2人（佐藤さんと松本さん）による対話・掛け合い形式</option>
+                                <option value="日本人ナレーター1人による優しい語りかけ形式">日本人ナレーター1人による優しい語りかけ形式</option>
+                                <option value="1分以内のショート動画・縦画面形式">1分以内のショート動画・縦画面形式</option>
+                                <option value="ステップ順の操作解説形式">ステップ順の操作解説形式</option>
+                            </select>
+                        </div>
+
+                        <!-- Visual/Background -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">ビジュアル・背景の指定</label>
+                            <select id="visualStyle" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                <option value="読み込ませたサムネイル画像（PNG）の雰囲気・色使いに100%マッチさせた背景（登場人物：日本人）">読み込んだサムネイル画像のトーンに100%合わせる</option>
+                                <option value="日本の明るいオフィス・コワーキングスペース（登場人物：日本人のビジネスパーソン）">日本の明るいオフィス・コワーキングスペース</option>
+                                <option value="自宅のリビングや書斎（登場人物：リラックスした日本人の男女）">自宅のリビングや書斎（リラックス）</option>
+                                <option value="親しみやすいイラスト・アニメーション背景">親しみやすいイラスト・図解ベース</option>
+                            </select>
+                        </div>
+
+                        <!-- Focus Points (Checkboxes) -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">AIホストが焦点を当てるべきこと (複数選択可)</label>
+                            <div class="space-y-2 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="focus" value="「考えるのを、ひとりにしない」寄り添う姿勢と安心感" class="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked>
+                                    <span class="text-sm">「考えるのを、ひとりにしない」寄り添う姿勢と安心感</span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="focus" value="圧倒的な「手軽さ・タイパ（自動で整理、1分でできる等）」" class="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked>
+                                    <span class="text-sm">圧倒的な「手軽さ・タイパ（自動で整理、1分でできる等）」</span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="focus" value="具体的な利用シーンとメリット（ビフォーアフター）" class="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm">具体的な利用シーンとメリット（ビフォーアフター）</span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="focus" value="専門用語を一切使わない「超・噛み砕いた解説」" class="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm">専門用語を一切使わない「超・噛み砕いた解説」</span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="focus" value="次のアクション（URLクリックなど）への明確な誘導" class="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked>
+                                    <span class="text-sm">次のアクション（URLクリックなど）への明確な誘導</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Generate Button -->
+                <button onclick="generatePrompt()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-transform transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    NotebookLM用プロンプトを生成する
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Column: Output Preview -->
+        <div class="w-1/2 bg-slate-50 flex flex-col relative z-0">
+            <div class="p-6 border-b border-slate-200 bg-white flex justify-between items-center shadow-sm z-10">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-code text-blue-500"></i> 生成されたプロンプト
+                </h2>
+                <button onclick="copyPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2">
+                    <i class="fa-regular fa-copy"></i> コピーする
+                </button>
+            </div>
+            
+            <div class="flex-1 p-6 overflow-hidden flex flex-col relative">
+                <!-- Copied Notification -->
+                <div id="copyToast" class="absolute top-8 right-8 bg-slate-800 text-white text-sm py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-20 flex items-center gap-2">
+                    <i class="fa-solid fa-check-circle text-green-400"></i> コピーしました！
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex-1 flex flex-col relative">
+                    <div class="bg-slate-100 border-b border-slate-200 py-2 px-4 rounded-t-xl flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <textarea id="promptOutput" class="flex-1 w-full p-6 text-sm font-mono text-slate-700 outline-none resize-none bg-transparent custom-scrollbar" readonly placeholder="左のフォームを入力し、「プロンプトを生成する」ボタンをクリックしてください。"></textarea>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                    <p class="text-sm text-blue-800 leading-relaxed">
+                        <strong>使い方：</strong><br>
+                        1. 上の「コピーする」ボタンを押します。<br>
+                        2. NotebookLMを開き、ソース（URLや画像）を読み込ませます。<br>
+                        3. チャット欄にペーストして送信すると、指定した形式の台本や構成案が生成されます。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Update UI slightly based on selected output format
+        function updateForm() {
+            const outputType = document.querySelector('input[name="outputType"]:checked').value;
+            const formatSelect = document.getElementById('formatStyle');
+            
+            // Clear current options
+            formatSelect.innerHTML = '';
+            
+            if (outputType === 'video') {
+                formatSelect.innerHTML = `
+                    <option value="日本人2人（佐藤さんと松本さん）による対話・掛け合い形式">日本人2人（佐藤さんと松本さん）による対話・掛け合い形式</option>
+                    <option value="日本人ナレーター1人による優しい語りかけ形式">日本人ナレーター1人による優しい語りかけ形式</option>
+                    <option value="1分以内のショート動画・縦画面形式">1分以内のショート動画・縦画面形式</option>
+                `;
+            } else if (outputType === 'slide') {
+                formatSelect.innerHTML = `
+                    <option value="プレゼンターが説明するための構成（台本ノート付き）">プレゼンターが説明するための構成（台本ノート付き）</option>
+                    <option value="資料単体で読んでも理解できる配布用スライド構成">資料単体で読んでも理解できる配布用スライド構成</option>
+                    <option value="図解と箇条書きを中心としたシンプル構成">図解と箇条書きを中心としたシンプル構成</option>
+                `;
+            } else if (outputType === 'infographic') {
+                formatSelect.innerHTML = `
+                    <option value="ステップバイステップの図解レイアウト">ステップバイステップの図解レイアウト</option>
+                    <option value="メリットを比較・羅列するレイアウト">メリットを比較・羅列するレイアウト</option>
+                    <option value="数値を強調するデータ視覚化レイアウト">数値を強調するデータ視覚化レイアウト</option>
+                `;
+            }
+        }
+
+        // Generate the prompt based on inputs
+        function generatePrompt() {
+            const projectName = document.getElementById('projectName').value || '指定なし';
+            const sourceInfo = document.getElementById('sourceInfo').value;
+            const outputType = document.querySelector('input[name="outputType"]:checked').value;
+            const formatStyle = document.getElementById('formatStyle').value;
+            const visualStyle = document.getElementById('visualStyle').value;
+            
+            // Get checked focus points
+            const focusCheckboxes = document.querySelectorAll('input[name="focus"]:checked');
+            let focusPoints = [];
+            focusCheckboxes.forEach((cb) => {
+                focusPoints.push(`・${cb.value}`);
+            });
+            const focusString = focusPoints.length > 0 ? focusPoints.join('\n') : '・特になし';
+
+            let promptText = '';
+
+            // --- Template for VIDEO ---
+            if (outputType === 'video') {
+                promptText = `# 目的
+左側に読み込ませたソース情報（URL、YouTube動画、サムネイル等）を基に、以下の指定条件に沿った、日本のユーザー向けの「動画解説用指示書（タイトル案・シーン構成・ナレーション台本）」を作成してください。
+
+# 1. 動画の指定条件
+・動画のテーマ：【 ${projectName} 】
+・動画の形式：【 ${formatStyle} 】
+・背景と登場人物のビジュアル：【 ${visualStyle} 】
+・AIホストが焦点を当てるべきこと：
+${focusString}
+
+---
+
+# 2. 出力フォーマット・指示
+Google Vidsなどの動画生成AIや動画編集ソフトにそのままコピー＆ペーストして使えるよう、以下の構成で出力してください。
+
+## ①【確定動画タイトル案】
+日本のユーザーが思わずクリックしたくなる、キャッチーで魅力的なタイトル（30文字以内）を3パターン提案してください。
+
+## ②【サムネイルと連動したビジュアル分析】
+読み込まれた画像やソースの世界観をどのように本編の映像イメージ（背景やトーン）に反映させたか、短い解説を記載してください。
+
+## ③【動画解説の構成とナレーション台本】
+全体の長さは3〜5分を想定し、時系列（タイムライン）に沿って「画面イメージ（選択した背景・日本人の描写）」と「ナレーション（または掛け合いのセリフ）」をセットにして最後まで作成してください。
+※「AI」などの技術用語は使わず、「自動で整理」「優しくサポート」など人間中心の分かりやすい日本語表現にしてください。`;
+            } 
+            
+            // --- Template for SLIDE ---
+            else if (outputType === 'slide') {
+                promptText = `# 目的
+左側に読み込ませたソース情報（URL等）を基に、以下の指定条件に沿った、日本のビジネスシーンでそのまま使える「スライド資料の構成案」を作成してください。
+
+# 1. スライドの指定条件
+・テーマ/プロジェクト名：【 ${projectName} 】
+・スライドの形式：【 ${formatStyle} 】
+・デザイン/トーン：【 ${visualStyle} 】
+・スライド作成において焦点を当てるべきこと：
+${focusString}
+
+---
+
+# 2. 出力フォーマット・指示
+プレゼンテーションソフト（GoogleスライドやPowerPoint）ですぐに作成作業に入れるよう、以下の構成で出力してください。
+
+## ①【スライド表紙タイトル案】
+惹きつけられるメインタイトルと、補足するサブタイトルを3パターン提案してください。
+
+## ②【スライド全体の目次（アジェンダ）】
+全体の流れがわかる目次を作成してください。（想定：全体で5〜8スライド程度）
+
+## ③【各スライドの詳細構成】
+スライドごとに以下のセットを出力してください。
+・スライド番号と見出し（例：P2. なぜ今、これが必要なのか？）
+・スライド内に記載するテキスト（箇条書きで短く、端的に）
+・ビジュアル指示（このスライドにどんな図解や画像を配置すべきかの指示）
+・スピーカーノート（プレゼンターが話す台本。自然な日本語の敬語で）`;
+            }
+
+            // --- Template for INFOGRAPHIC ---
+            else if (outputType === 'infographic') {
+                promptText = `# 目的
+左側に読み込ませたソース情報を基に、以下の指定条件に沿った、SNSやWebサイトで目を引く「インフォグラフィック（図解画像）の構成案」を作成してください。
+
+# 1. インフォグラフィックの指定条件
+・テーマ：【 ${projectName} 】
+・レイアウト形式：【 ${formatStyle} 】
+・デザイン/トーン：【 ${visualStyle} 】
+・情報の整理において焦点を当てるべきこと：
+${focusString}
+
+---
+
+# 2. 出力フォーマット・指示
+デザイナーやデザインツール（Canva等）での制作指示書としてそのまま使えるよう、以下の構成で出力してください。
+
+## ①【メインコピー（最上部に大きく配置する文字）】
+パッと見て内容が伝わる、15文字以内のキャッチコピーを3パターン提案してください。
+
+## ②【抽出されたキーデータ / メリット】
+ソースの中から、図解して強調すべき「最も重要な数字」や「3つのメリット」などを厳選して抽出してください。
+
+## ③【セクション別のレイアウト・テキスト指示】
+上から下への視線の動きに合わせて、セクションごとに以下の情報を整理してください。
+・セクション見出し
+・配置するテキスト（極力短く）
+・アイコンや図解の指定（例：「ここに右肩上がりの矢印のアイコン」「ここにビフォーアフターのイラスト」など）`;
+            }
+
+            // Set the generated text to the textarea
+            document.getElementById('promptOutput').value = promptText;
+            
+            // Slight highlight effect to show it generated
+            const outputArea = document.getElementById('promptOutput');
+            outputArea.classList.add('bg-blue-50');
+            setTimeout(() => {
+                outputArea.classList.remove('bg-blue-50');
+            }, 300);
+        }
+
+        // Copy prompt to clipboard
+        function copyPrompt() {
+            const promptText = document.getElementById('promptOutput').value;
+            
+            if (!promptText) {
+                alert("先にプロンプトを生成してください。");
+                return;
+            }
+
+            // Fallback for clipboard API in iframes
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = promptText;
+                
+                // Avoid scrolling to bottom
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    showToast();
+                } else {
+                    console.error('Fallback: Copying text command was unsuccessful');
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        // Initialize form on load
+        window.onload = function() {
+            updateForm();
+            generatePrompt(); // Generate initial prompt
+        };
+    </script>
+</body>
+</html>
